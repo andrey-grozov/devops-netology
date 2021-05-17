@@ -1,6 +1,7 @@
-# devops-netology
-first line
+#devops-netology
+``first line``
 second line
+another line
 в .gitignore будут проигнорированы файлы или каталоги, которые мы укажем по опредедленным шаблонам.
 # Игнорируется указанный файл
 crash.log
@@ -12,3 +13,4 @@ log/**/*.log
 *.t??
 # Отслеживать файлы, которые попадают под исключение выше
 !test.tmp
+
