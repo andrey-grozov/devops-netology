@@ -237,8 +237,8 @@ Rоманда с sudo tee будет работать будет потому ч
     
 #### 3.Предположим, приложение пишет лог в текстовый файл. Этот файл оказался удален (deleted в lsof), однако возможности сигналом сказать приложению переоткрыть файлы или просто перезапустить приложение – нет. Так как приложение продолжает писать в удаленный файл, место на диске постепенно заканчивается. Основываясь на знаниях о перенаправлении потоков предложите способ обнуления открытого удаленного файла (чтобы освободить место на файловой системе).
 
-    vagrant@vagrant:~/big$ cat /dev/urandom >> file.img
-    vagrant@vagrant:~/big$ rm file.img
+    vagrant@vagrant:~/big$ cat /dev/urandom >> logfile
+    vagrant@vagrant:~/big$ rm logfile
     vagrant@vagrant:~/big$ lsof | grep cat
     lsof: WARNING: can't stat() tracefs file system /sys/kernel/debug/tracing
       Output information may be incomplete.
@@ -249,11 +249,11 @@ Rоманда с sudo tee будет работать будет потому ч
     cat       2747                        vagrant  mem       REG              253,0    2029224    1313864 /usr/lib/x86_64-linux-gnu/libc-2.31.so
     cat       2747                        vagrant  mem       REG              253,0     191472    1313821 /usr/lib/x86_64-linux-gnu/ld-2.31.so
     cat       2747                        vagrant    0u      CHR              136,1        0t0          4 /dev/pts/1
-    cat       2747                        vagrant    1w      REG              253,0 1750372352     131101 /home/vagrant/big/file.img (deleted)
+    cat       2747                        vagrant    1w      REG              253,0 1750372352     131101 /home/vagrant/big/logfile (deleted)
     cat       2747                        vagrant    2u      CHR              136,1        0t0          4 /dev/pts/1
     cat       2747                        vagrant    3r      CHR                1,9        0t0         11 /dev/urandom
     cat       2747                        vagrant    9u      CHR              136,1        0t0          4 /dev/pts/1
-    vagrant@vagrant:~/big$ kill -9 2747
+    vagrant@vagrant:~/big$ cat /dev/null > /proc/2747/fd/1
     
 #### 4.Занимают ли зомби-процессы какие-то ресурсы в ОС (CPU, RAM, IO)?
 
