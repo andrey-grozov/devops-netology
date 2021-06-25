@@ -245,3 +245,70 @@
 
     Наиболее часто встречающийся стстус - S    interruptible sleep. 
     Дополнительные символы к основной букве выводят расширенную информацию о процессе (приоритет процесса, имеет заблокированные страницы в памяти и др.) 
+
+## Домашнее задание к занятию "3.4. Операционные системы, лекция 2"
+#### 1.Node Exporter
+    unit-файл
+    vagrant@vagrant:~$ cat /etc/systemd/system/node_exporter.service
+    [Unit]
+    Description=Node Exporter
+    After=network-online.target
+    
+    [Service]
+    User=node_exporter
+    Group=node_exporter
+    Type=simple
+    EnvironmentFile=-/etc/default/node_exporter
+    ExecStart=/usr/local/bin/node_exporter $EXTRA_OPTS
+    
+    [Install]
+    WantedBy=multi-user.target    
+    
+    файл с параметрами
+    vagrant@vagrant:~$ cat /etc/default/node_exporter
+    EXTRA_OPTS="--collector.disable-defaults --collector.cpu --collector.meminfo --collector.filesystem --collector.netdev"
+
+    systemctl daemon-reload
+    systemctl enable node_exporter
+    systemctl start node_exporter
+    systemctl status node_exporter
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.894Z caller=node_exporter.go:179 msg="Build context" build_context="(go=go1.15.8, user>Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=filesystem_common.go:74 collector=filesystem msg="Parsed flag --collector.>Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=filesystem_common.go:76 collector=filesystem msg="Parsed flag --collector.>Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=node_exporter.go:106 msg="Enabled collectors"
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=node_exporter.go:113 collector=cpu
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=node_exporter.go:113 collector=filesystem
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.895Z caller=node_exporter.go:113 collector=meminfo
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.896Z caller=node_exporter.go:113 collector=netdev
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.896Z caller=node_exporter.go:195 msg="Listening on" address=:9100
+    Jun 25 02:27:05 vagrant node_exporter[1692]: level=info ts=2021-06-25T02:27:05.896Z caller=tls_config.go:191 msg="TLS is disabled." http2=false
+
+#### 2.Ознакомьтесь с опциями node_exporter и выводом /metrics по-умолчанию. Приведите несколько опций, которые вы бы выбрали для базового мониторинга хоста по CPU, памяти, диску и сети.
+    --collector.cpu 
+    --collector.meminfo 
+    --collector.filesystem 
+    --collector.netdev
+
+#### 4.Можно ли по выводу dmesg понять, осознает ли ОС, что загружена не на настоящем оборудовании, а на системе виртуализации?
+    Да можно, есть много сообщений про систему виртуализации, например:
+    Booting paravirtualized kernel on KVM
+    Detected virtualization oracle.
+
+#### 5.Как настроен sysctl fs.nr_open на системе по-умолчанию? Узнайте, что означает этот параметр. Какой другой существующий лимит не позволит достичь такого числа (ulimit --help)?
+    Значение по умолчанияю для максимального значения дескрипторов fs.nr_open = 1024*1024 (1048576)
+    Ulimit органичивает ресурсы на текущую сессию - open files (-n) 1024.
+#### 6.Запустите любой долгоживущий процесс (не ls, который отработает мгновенно, а, например, sleep 1h) в отдельном неймспейсе процессов; покажите, что ваш процесс работает под PID 1 через nsenter. Для простоты работайте в данном задании под root (sudo -i). Под обычным пользователем требуются дополнительные опции (--map-root-user) и т.д.
+    vagrant@vagrant:~$ sudo unshare -f --pid --mount-proc sleep 1h
+    vagrant@vagrant:~$ ps aux | grep sleep
+    root        2539  0.0  0.0   8076   528 pts/0    S    12:37   0:00 sleep 1h
+    
+    vagrant@vagrant:~$ sudo nsenter --target 2539 --pid --mount
+    root@vagrant:/# ps aux
+    USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+    root           1  0.0  0.0   8076   528 pts/0    S+   12:37   0:00 sleep 1h
+    root           2  0.0  0.3   9836  4012 pts/1    S    12:53   0:00 -bash
+    root          11  0.0  0.3  11492  3396 pts/1    R+   12:53   0:00 ps aux
+#### 7. Найдите информацию о том, что такое :(){ :|:& };:. Запустите эту команду в своей виртуальной машине Vagrant с Ubuntu 20.04 (это важно, поведение в других ОС не проверялось). Некоторое время все будет "плохо", после чего (минуты) – ОС должна стабилизироваться. Вызов dmesg расскажет, какой механизм помог автоматической стабилизации. Как настроен этот механизм по-умолчанию, и как изменить число процессов, которое можно создать в сессии?
+    :(){ :|:& };: = это форк-бомба, функция, которая порождает себя n-раз, до исчерпания ресурссов системы.
+    
+    Механизм автоматической стабилизации - fork rejected by pids controller in /user.slice/user-1000.slice/session-3.scope
+    Ограничение максимального числа задач.
+    По умолчанию TaskMax равен 33%, его можно увеличить в файле /usr/lib/systemd/system/user-.slice.d/10-defaults.conf
+    
