@@ -310,5 +310,13 @@
     
     Механизм автоматической стабилизации - fork rejected by pids controller in /user.slice/user-1000.slice/session-3.scope
     Ограничение максимального числа задач.
-    По умолчанию TaskMax равен 33% (зависит от размера оперативной памяти выдлененной ОС), его можно увеличить в файле /usr/lib/systemd/system/user-.slice.d/10-defaults.conf
-    
+    По умолчанию TaskMax равен 33% (от ограничений user.slice и зависит от размера оперативной памяти выделенной ОС), его можно увеличить в файле /usr/lib/systemd/system/user-.slice.d/10-defaults.conf
+    vagrant@vagrant:~$ systemctl status
+    ● vagrant
+        State: running
+         Jobs: 0 queued
+       Failed: 0 units
+        Since: Sat 2021-06-26 04:40:28 UTC; 1h 12min ago
+       CGroup: /
+               ├─user.slice
+               │ └─user-1000.slice
