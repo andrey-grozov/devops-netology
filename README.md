@@ -310,5 +310,5 @@
     
     Механизм автоматической стабилизации - fork rejected by pids controller in /user.slice/user-1000.slice/session-3.scope
     Ограничение максимального числа задач.
-    По умолчанию TaskMax равен 33%, его можно увеличить в файле /usr/lib/systemd/system/user-.slice.d/10-defaults.conf
+    По умолчанию TaskMax равен 33% (зависит от размера оперативной памяти выдлененной ОС), его можно увеличить в файле /usr/lib/systemd/system/user-.slice.d/10-defaults.conf
     
