@@ -1,4 +1,134 @@
 # Домашние задания
+
+## Домашнее задание к занятию "3.8. Компьютерные сети, лекция 3"
+
+#### 1.ipvs. Если при запросе на VIP сделать подряд несколько запросов (например, for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done ), ответы будут получены почти мгновенно. Тем не менее, в выводе ipvsadm -Ln еще некоторое время будут висеть активные InActConn. Почему так происходит?
+    Мы будем видеть запись в столбце InActConn до тех пор, пока не истечет время ожидания соединения(для некоторых сервисов таких, как http/1.0, ftp-data). 
+#### 2.На лекции мы познакомились отдельно с ipvs и отдельно с keepalived. Воспользовавшись этими знаниями, совместите технологии вместе (VIP должен подниматься демоном keepalived). Приложите конфигурационные файлы, которые у вас получились, и продемонстрируйте работу получившейся конструкции. Используйте для директора отдельный хост, не совмещая его с риалом! Подобная схема возможна, но выходит за рамки рассмотренного на лекции.
+    Исходные данные
+   
+      'netology1'  '172.28.128.10',  хост пользователя 
+      'netology2'  '172.28.128.20',  балансер 1
+      'netology3'  '172.28.128.30',  балансер 2
+      'netology4'  '172.28.128.40',  сервер 1
+      'netology5'  '172.28.128.50',  сервер 2
+ 
+    Файлы конфигурации 
+
+    vrrp_instance VI_1 {
+            state BACKUP
+            interface eth1
+            virtual_router_id 33
+            priority 100
+            advert_int 1
+            authentication {
+                    auth_type PASS
+                    auth_pass netology
+            }
+            virtual_ipaddress {
+                    172.28.128.200/32 dev eth1
+            }
+    }
+
+    vrrp_instance VI_2 {
+            state BACKUP
+            interface eth1
+            virtual_router_id 33
+            priority 50
+            advert_int 1
+            authentication {
+                    auth_type PASS
+                    auth_pass netology
+            }
+            virtual_ipaddress {
+                    172.28.128.200/32 dev eth1
+            }
+    }
+    
+ 
+
+    Делаем запрос на серверы с хоста пользователя
+    vagrant@netology1:~$ for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done
+    
+    Состояние балансера 1
+    root@netology2:~# systemctl status keepalived
+    ● keepalived.service - Keepalive Daemon (LVS and VRRP)
+         Loaded: loaded (/lib/systemd/system/keepalived.service; enabled; vendor preset: enabled)
+         Active: active (running) since Mon 2021-07-12 09:30:26 UTC; 6min ago
+       Main PID: 993 (keepalived)
+          Tasks: 2 (limit: 1072)
+         Memory: 1.4M
+         CGroup: /system.slice/keepalived.service
+                 ├─ 993 /usr/sbin/keepalived --dont-fork
+                 └─1004 /usr/sbin/keepalived --dont-fork
+    
+    Jul 12 09:30:26 netology2 Keepalived[993]: Starting VRRP child process, pid=1004
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: Registering Kernel netlink reflector
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: Registering Kernel netlink command channel
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: Opening file '/etc/keepalived/keepalived.conf'.
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: Registering gratuitous ARP shared channel
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: (VI_1) Entering BACKUP STATE (init)
+    Jul 12 09:30:26 netology2 Keepalived_vrrp[1004]: (VI_1) received lower priority (50) advert from 172.28.128.30 - discarding
+    Jul 12 09:30:27 netology2 Keepalived_vrrp[1004]: (VI_1) received lower priority (50) advert from 172.28.128.30 - discarding
+    Jul 12 09:30:28 netology2 Keepalived_vrrp[1004]: (VI_1) received lower priority (50) advert from 172.28.128.30 - discarding
+    Jul 12 09:30:29 netology2 Keepalived_vrrp[1004]: (VI_1) Entering MASTER STATE
+
+    root@netology2:~# ipvsadm -Ln --stats
+    IP Virtual Server version 1.2.1 (size=4096)
+    Prot LocalAddress:Port               Conns   InPkts  OutPkts  InBytes OutBytes
+      -> RemoteAddress:Port
+    TCP  172.28.128.200:80                  50      300        0    19950        0
+      -> 172.28.128.40:80                   25      150        0     9975        0
+      -> 172.28.128.50:80                   25      150        0     9975        0
+    
+    Состояние балансера 2    
+    root@netology3:~# systemctl status keepalived
+    ● keepalived.service - Keepalive Daemon (LVS and VRRP)
+         Loaded: loaded (/lib/systemd/system/keepalived.service; enabled; vendor preset: enabled)
+         Active: active (running) since Mon 2021-07-12 09:31:38 UTC; 8s ago
+       Main PID: 13777 (keepalived)
+          Tasks: 2 (limit: 1072)
+         Memory: 1.5M
+         CGroup: /system.slice/keepalived.service
+                 ├─13777 /usr/sbin/keepalived --dont-fork
+                 └─13781 /usr/sbin/keepalived --dont-fork
+    
+    Jul 12 09:31:38 netology3 Keepalived[13777]: Starting Keepalived v2.0.19 (10/19,2019)
+    Jul 12 09:31:38 netology3 Keepalived[13777]: WARNING - keepalived was build for newer Linux 5.4.18, running on Linux 5.4.0-73-generic #82-Ubuntu SMP Wed Apr 14 17:39>
+    Jul 12 09:31:38 netology3 Keepalived[13777]: Command line: '/usr/sbin/keepalived' '--dont-fork'
+    Jul 12 09:31:38 netology3 Keepalived[13777]: Opening file '/etc/keepalived/keepalived.conf'.
+    Jul 12 09:31:38 netology3 Keepalived[13777]: Starting VRRP child process, pid=13781
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: Registering Kernel netlink reflector
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: Registering Kernel netlink command channel
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: Opening file '/etc/keepalived/keepalived.conf'.
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: Registering gratuitous ARP shared channel
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: (VI_2) Entering BACKUP STATE (init)
+
+    Роняем интерфейс eth1 на балансере 1 в даун ip link set eth1 down
+    Состояние балансера 1
+    Jul 12 09:40:55 netology2 Keepalived_vrrp[1004]: Netlink reports eth1 down
+    Jul 12 09:40:55 netology2 Keepalived_vrrp[1004]: (VI_1) Entering FAULT STATE
+    Jul 12 09:40:55 netology2 Keepalived_vrrp[1004]: (VI_1) sent 0 priority
+    Балансер 2 переходит в стостояние Master
+    Jul 12 09:31:38 netology3 Keepalived_vrrp[13781]: (VI_2) Entering BACKUP STATE (init)
+    Jul 12 09:41:00 netology3 Keepalived_vrrp[13781]: (VI_2) Entering MASTER STATE
+    
+    Запускаем 50 запросов c хоста пользователя и смотрим состояние второго балансера
+    root@netology3:~# ipvsadm -Ln --stats
+    IP Virtual Server version 1.2.1 (size=4096)
+    Prot LocalAddress:Port               Conns   InPkts  OutPkts  InBytes OutBytes
+      -> RemoteAddress:Port
+    TCP  172.28.128.200:80                  50      300        0    19950        0
+      -> 172.28.128.40:80                   25      150        0     9975        0
+      -> 172.28.128.50:80                   25      150        0     9975        0
+    
+    Записи на серверах 1 и 2
+    root@netology4:/var/log/nginx# wc -l /var/log/nginx/access.log
+    52 /var/log/nginx/access.log
+    root@netology5:/var/log/nginx# wc -l /var/log/nginx/access.log
+    50 /var/log/nginx/access.log
+#### 3.В лекции мы использовали только 1 VIP адрес для балансировки. У такого подхода несколько отрицательных моментов, один из которых – невозможность активного использования нескольких хостов (1 адрес может только переехать с master на standby). Подумайте, сколько адресов оптимально использовать, если мы хотим без какой-либо деградации выдерживать потерю 1 из 3 хостов при входящем трафике 1.5 Гбит/с и физических линках хостов в 1 Гбит/с? Предполагается, что мы хотим задействовать 3 балансировщика в активном режиме (то есть не 2 адреса на 3 хоста, один из которых в обычное время простаивает).
+    Для оптимальной работы нам необходимо 3 адреса на 4 балансировщика (3 master, 1 backup, чтобы при выходе из строя одного из 3х балансировщиков нагрузка переключилась на резервный и у соседних балансировщиков не возросла нагрузка.  
 ## Домашнее задание к занятию "3.7. Компьютерные сети, лекция 2"
 
 #### 1.На лекции мы обсудили, что манипулировать размером окна необходимо для эффективного наполнения приемного буфера участников TCP сессии (Flow Control). Подобная проблема в полной мере возникает в сетях с высоким RTT. Например, если вы захотите передать 500 Гб бэкап из региона Юга-Восточной Азии на Восточное побережье США. Здесь вы можете увидеть и 200 и 400 мс вполне реального RTT. Подсчитайте, какого размера нужно окно TCP чтобы наполнить 1 Гбит/с канал при 300 мс RTT (берем простую ситуацию без потери пакетов). Можно воспользоваться готовым калькулятором. Ознакомиться с формулами, по которым работает калькулятор можно, например, на Wiki.
