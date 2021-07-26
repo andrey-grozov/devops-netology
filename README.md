@@ -1,5 +1,153 @@
 # Домашние задания
 
+## Домашнее задание к занятию "3.9. Элементы безопасности информационных систем"
+
+#### Запустить Vault-сервер в dev-режиме (дополнив ключ -dev упомянутым выше -dev-listen-address, если хотите увидеть UI).
+    Запустили сервер в одном терминале
+    vagrant@vagrant:/etc/vault.d$ vault server -dev -dev-listen-address="0.0.0.0:8200"
+    Выполнили настройки в другом терминале
+    vagrant@vagrant:~$ export VAULT_ADDR='http://127.0.0.1:8200'
+    vagrant@vagrant:~$ export VAULT_TOKEN="s.POAsCLMr5h4TOiwsPRmFoFHm"
+    vagrant@vagrant:~$ vault status
+    Key             Value
+    ---             -----
+    Seal Type       shamir
+    Initialized     true
+    Sealed          false
+    Total Shares    1
+    Threshold       1
+    Version         1.7.3
+    Storage Type    inmem
+    Cluster Name    vault-cluster-8df0087c
+    Cluster ID      c1fbc3fb-382e-bf9d-f6c9-b2e27aeb6b58
+    HA Enabled      false
+
+#### Используя PKI Secrets Engine, создайте Root CA и Intermediate CA. Обратите внимание на дополнительные материалы по созданию CA в Vault, если с изначальной инструкцией возникнут сложности.
+    
+    vagrant@vagrant:~$ vault secrets enable pki                     - монтируем pki
+    Success! Enabled the pki secrets engine at: pki/
+    vagrant@vagrant:~$ vault secrets tune -max-lease-ttl=87600h pki  - увеличили максимальное время жизни сертификата до 10 лет
+    Success! Tuned the secrets engine at: pki/
+    Создаем root
+    vault write pki/root/generate/internal common_name=myvault.com ttl=87600h
+    Key              Value
+    ---              -----
+    certificate      -----BEGIN CERTIFICATE-----
+    MIIDNTCCAh2gAwIBAgIUf5NwQ0WefoUUyc
+
+    Публикуем URL’ы для корневого центра сертификации
+    vagrant@vagrant:~$ vault write pki/config/urls issuing_certificates="http://vault.example.com:8200/v1/pki/ca" crl_distribution_points="http://vault.example.com:8200/v1/pki/crl"
+    Success! Data written to: pki/config/urls
+    
+    Создаем роль, с помощью которой будем выдавать сертификаты для серверов    
+    vagrant@vagrant:~$ vault write pki/roles/example-dot-com \allowed_domains=example.com \allow_subdomains=true max_ttl=72h
+    Success! Data written to: pki/roles/example-dot-com
+
+    Создаем Intermediate CA
+    vagrant@vagrant:~$ vault secrets enable -path=pki_int pki -монтируем
+    Success! Enabled the pki secrets engine at: pki_int/
+    vagrant@vagrant:~$ vault secrets tune -max-lease-ttl=43800h pki_int - устанавливаем срок на 5 лет
+    Success! Tuned the secrets engine at: pki_int/
+    
+    Создаем запрос
+    vault write pki_int/intermediate/generate/internal common_name="myvault.com Intermediate Authority" ttl=43800h
+    Key    Value
+    ---    -----
+    csr    -----BEGIN CERTIFICATE REQUEST-----
+    MIICcjCCAVoC......
+
+    Сертификат для промежуточного центра сертификации
+    vagrant@vagrant:~$ vault write pki/root/sign-intermediate csr=@int.csr format=pem_bundle ttl=43800h
+    Key              Value
+    ---              -----
+    certificate      -----BEGIN CERTIFICATE-----
+    MIIDtjC......
+    
+    Публикуем подписанный сертификат
+    vagrant@vagrant:~$ vault write pki_int/intermediate/set-signed certificate=@int.pem
+    Success! Data written to: pki_int/intermediate/set-signed
+    
+    Публикуем URL’ы для промежуточного центра сертификации
+    vagrant@vagrant:~$ vault write pki_int/config/urls issuing_certificates="http://127.0.0.1:8200/v1/pki_int/ca" crl_distribution_points="http://127.0.0.1:8200/v1/pki_int/crl"
+    Success! Data written to: pki_int/config/urls
+    
+    Создаем роль
+    vagrant@vagrant:~$ vault write pki_int/roles/example-dot-com \allowed_domains=example.com \allow_subdomains=true max_ttl=72h
+    Success! Data written to: pki_int/roles/example-dot-com
+    
+ 
+#### Согласно этой же инструкции, подпишите Intermediate CA csr на сертификат для тестового домена (например, netology.example.com если действовали согласно инструкции).
+    Создаем запрос
+    vagrant@vagrant:~$ vault write pki_int_netology/intermediate/generate/internal common_name="netology.example.com" ttl=43800h
+    Key    Value
+    ---    -----
+    csr    -----BEGIN CERTIFICATE REQUEST-----
+    MIICl......
+    
+    Получаем сертификат
+    vagrant@vagrant:~$ vault write pki/root/sign-intermediate csr=@int_netology.csr format=pem_bundle ttl=43800h
+    Key              Value
+    ---              -----
+    certificate      -----BEGIN CERTIFICATE-----
+    MIIDyz.....
+    
+    Публикуем подписанный сертификат
+    vagrant@vagrant:~$ vault write pki_int_netology/intermediate/set-signed certificate=@int_netology.pem
+    Success! Data written to: pki_int_netology/intermediate/set-signed
+
+    Создаем роль
+    vagrant@vagrant:~$ vault write pki_int_netology/roles/example-dot-com \allowed_domains=example.com \allow_subdomains=true max_ttl=72h
+    Success! Data written to: pki_int_netology/roles/example-dot-com
+
+    Выпускаем сертификат
+    vagrant@vagrant:~$ vault write pki_int_netology/issue/example-dot-com \common_name=netology.example.com
+    Key                 Value
+    ---                 -----
+    ca_chain            [-----BEGIN CERTIFICATE-----
+    MIID...
+
+  
+#### Поднимите на localhost nginx, сконфигурируйте default vhost для использования подписанного Vault Intermediate CA сертификата и выбранного вами домена. Сертификат из Vault подложить в nginx руками.
+    Конфигурируем nginx
+    server {
+    listen 443 ssl;
+    server_name netology.example.com www.netology.example.com;
+    access_log /var/log/nginx/netology-example-com.access.log;
+    root /var/www/netology.example.com/public_html/;
+    index index.html index.htm;
+    ssl_certificate /home/vagrant/netology1.pem;
+    ssl_certificate_key /home/vagrant/netology1.pem;
+    location / {
+    try_files $uri $uri/ =404;
+    }
+    }
+
+
+#### Модифицировав /etc/hosts и системный trust-store, добейтесь безошибочной с точки зрения HTTPS работы curl на ваш тестовый домен (отдающийся с localhost). Рекомендуется добавлять в доверенные сертификаты Intermediate CA. Root CA добавить было бы правильнее, но тогда при конфигурации nginx потребуется включить в цепочку Intermediate, что выходит за рамки лекции. Так же, пожалуйста, не добавляйте в доверенные сам сертификат хоста.
+    добавляем в hosts запись 127.0.0.1 netology.example.com
+    
+    Добавляем Issuing CA в доверенные и обновляем список
+    vagrant@vagrant:~$ sudo ln -s /home/vagrant/netology_iss.crt /usr/local/share/ca-certificates/netology_iss.crt
+    vagrant@vagrant:~$ sudo  update-ca-certificates
+    Updating certificates in /etc/ssl/certs...
+    1 added, 0 removed; done.
+    Running hooks in /etc/ca-certificates/update.d...
+    done.
+    
+    Проверяем работу
+    vagrant@vagrant:~$ curl https://netology.example.com
+    It's wooooork!
+    vagrant@vagrant:~$ curl -I -s https://netology.example.com
+    HTTP/1.1 200 OK
+    Server: nginx/1.18.0 (Ubuntu)
+    Date: Mon, 26 Jul 2021 05:13:09 GMT
+    Content-Type: text/html
+    Content-Length: 15
+    Last-Modified: Mon, 26 Jul 2021 03:05:16 GMT
+    Connection: keep-alive
+    ETag: "60fe266c-f"
+    Accept-Ranges: bytes
+
 ## Домашнее задание к занятию "3.8. Компьютерные сети, лекция 3"
 
 #### 1.ipvs. Если при запросе на VIP сделать подряд несколько запросов (например, for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done ), ответы будут получены почти мгновенно. Тем не менее, в выводе ipvsadm -Ln еще некоторое время будут висеть активные InActConn. Почему так происходит?
