@@ -2,7 +2,7 @@
 
 ## Домашнее задание к занятию "3.9. Элементы безопасности информационных систем"
 
-#### Запустить Vault-сервер в dev-режиме (дополнив ключ -dev упомянутым выше -dev-listen-address, если хотите увидеть UI).
+#### 1.Запустить Vault-сервер в dev-режиме (дополнив ключ -dev упомянутым выше -dev-listen-address, если хотите увидеть UI).
     Запустили сервер в одном терминале
     vagrant@vagrant:/etc/vault.d$ vault server -dev -dev-listen-address="0.0.0.0:8200"
     Выполнили настройки в другом терминале
@@ -22,7 +22,7 @@
     Cluster ID      c1fbc3fb-382e-bf9d-f6c9-b2e27aeb6b58
     HA Enabled      false
 
-#### Используя PKI Secrets Engine, создайте Root CA и Intermediate CA. Обратите внимание на дополнительные материалы по созданию CA в Vault, если с изначальной инструкцией возникнут сложности.
+#### 3.Используя PKI Secrets Engine, создайте Root CA и Intermediate CA. Обратите внимание на дополнительные материалы по созданию CA в Vault, если с изначальной инструкцией возникнут сложности.
     
     vagrant@vagrant:~$ vault secrets enable pki                     - монтируем pki
     Success! Enabled the pki secrets engine at: pki/
@@ -76,7 +76,7 @@
     Success! Data written to: pki_int/roles/example-dot-com
     
  
-#### Согласно этой же инструкции, подпишите Intermediate CA csr на сертификат для тестового домена (например, netology.example.com если действовали согласно инструкции).
+#### 4.Согласно этой же инструкции, подпишите Intermediate CA csr на сертификат для тестового домена (например, netology.example.com если действовали согласно инструкции).
     Создаем запрос
     vagrant@vagrant:~$ vault write pki_int_netology/intermediate/generate/internal common_name="netology.example.com" ttl=43800h
     Key    Value
@@ -107,7 +107,7 @@
     MIID...
 
   
-#### Поднимите на localhost nginx, сконфигурируйте default vhost для использования подписанного Vault Intermediate CA сертификата и выбранного вами домена. Сертификат из Vault подложить в nginx руками.
+#### 5.Поднимите на localhost nginx, сконфигурируйте default vhost для использования подписанного Vault Intermediate CA сертификата и выбранного вами домена. Сертификат из Vault подложить в nginx руками.
     Конфигурируем nginx
     server {
     listen 443 ssl;
@@ -123,7 +123,7 @@
     }
 
 
-#### Модифицировав /etc/hosts и системный trust-store, добейтесь безошибочной с точки зрения HTTPS работы curl на ваш тестовый домен (отдающийся с localhost). Рекомендуется добавлять в доверенные сертификаты Intermediate CA. Root CA добавить было бы правильнее, но тогда при конфигурации nginx потребуется включить в цепочку Intermediate, что выходит за рамки лекции. Так же, пожалуйста, не добавляйте в доверенные сам сертификат хоста.
+#### 6.Модифицировав /etc/hosts и системный trust-store, добейтесь безошибочной с точки зрения HTTPS работы curl на ваш тестовый домен (отдающийся с localhost). Рекомендуется добавлять в доверенные сертификаты Intermediate CA. Root CA добавить было бы правильнее, но тогда при конфигурации nginx потребуется включить в цепочку Intermediate, что выходит за рамки лекции. Так же, пожалуйста, не добавляйте в доверенные сам сертификат хоста.
     добавляем в hosts запись 127.0.0.1 netology.example.com
     
     Добавляем Issuing CA в доверенные и обновляем список
