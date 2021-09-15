@@ -30,7 +30,7 @@
   
 Скриншот вывода командной строки после запуска контейнера из вашего базового образа
     
-    ![Скриншот вывода](https://github.com/andrey-grozov/devops-netology/blob/main/img_2.png)
+![Скриншот вывода](https://github.com/andrey-grozov/devops-netology/blob/main/img_2.png)
 
 Ссылку на образ в вашем хранилище docker-hub
 
@@ -87,9 +87,9 @@
     
 Скриншоты веб-интерфейса Jenkins запущенных вами контейнеров (достаточно 1 скриншота на контейнер)
 
-    ![Скриншот веб-интерфейса](https://github.com/andrey-grozov/devops-netology/blob/main/img_3.png)
+![Скриншот веб-интерфейса](https://github.com/andrey-grozov/devops-netology/blob/main/img_3.png)
 
-    ![Скриншот веб-интерфейсаimg_4.png](https://github.com/andrey-grozov/devops-netology/blob/main/img_4.png)
+![Скриншот веб-интерфейсаimg_4.png](https://github.com/andrey-grozov/devops-netology/blob/main/img_4.png)
 Ссылки на образы в вашем хранилище docker-hub
 
     https://hub.docker.com/repository/docker/mrgrav/netology
