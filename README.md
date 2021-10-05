@@ -73,13 +73,9 @@
     
 Как бы вы доработали бэкап-файл, чтобы добавить уникальность значения столбца title для таблиц test_database?
 
-    CREATE TABLE public.orders (
-        id integer NOT NULL,
-        title character varying(80) NOT NULL,
-        price integer DEFAULT 0
-        CONSTRAINT order_title UNIQUE (title) - добавляем уникальность столбца
-    );
-
+    Необходимо добавить строку
+    ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_title_key UNIQUE (title);
 
 ## Домашнее задание к занятию "6.3. MySQL"
 Введение
