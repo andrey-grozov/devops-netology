@@ -1,5 +1,7 @@
 # Домашние задания
-## Домашнее задание к занятию "6.5. Elasticsearch"
+## [Домашнее задание к занятию "7.1. Инфраструктура как код"](07-terraform-01-intro/readme.md)
+
+## [Домашнее задание к занятию "6.5. Elasticsearch"](/06-db-05-elasticsearch/readme.md)
 #### Задача 1
 
 В этом задании вы потренируетесь в:
@@ -321,7 +323,7 @@
     green  open   test-2           6iHTxXRORru89AZQI2yAYw   1   0          0            0       208b           208b
     green  open   test             GyhfCQBUQ4GvpCWuZkl5GA   1   0          0            0       208b           208b
 
-## Домашнее задание к занятию "6.4. PostgreSQL"
+## [Домашнее задание к занятию "6.4. PostgreSQL"](/06-db-04-postgresql/readme.md)
 #### Задача 1
 
 Используя docker поднимите инстанс PostgreSQL (версию 13). Данные БД сохраните в volume.
