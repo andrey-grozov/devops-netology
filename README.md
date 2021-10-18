@@ -1,4 +1,7 @@
 # Домашние задания
+
+## [Домашнее задание к занятию "7.2. Облачные провайдеры и синтаксис Terraform."](07-terraform-02-syntax/readme.md)
+
 ## [Домашнее задание к занятию "7.1. Инфраструктура как код"](07-terraform-01-intro/readme.md)
 
 ## [Домашнее задание к занятию "6.6. Troubleshooting"](/06-db-06-troobleshooting/readme.md)
