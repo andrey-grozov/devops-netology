@@ -242,8 +242,8 @@
         }
     }
 
-  # aws_instance.TestUbuntu["t3.micro"] will be created
-  + resource "aws_instance" "TestUbuntu" {
+    #aws_instance.TestUbuntu["t3.micro"] will be created
+    + resource "aws_instance" "TestUbuntu" {
       + ami                                  = "ami-0e5e17317f99b2932"
       + arn                                  = (known after apply)
       + associate_public_ip_address          = (known after apply)
