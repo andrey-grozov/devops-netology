@@ -25,11 +25,73 @@
 
 В виде решения на это упражнение приведите выводы команд с вашего компьютера (виртуальной машины):
 
-    - curl http://localhost:8086/ping
-    - curl http://localhost:8888
-    - curl http://localhost:9092/kapacitor/v1/ping
+    - curl http://localhost:8086/ping -v
+    vagrant@vagrant:~/sandbox$ curl http://localhost:8086/ping -v
+    Trying ::1:8086...
+    TCP_NODELAY set
+    Connected to localhost (::1) port 8086 (#0)
+    > GET /ping HTTP/1.1
+    > Host: localhost:8086
+    > User-Agent: curl/7.68.0
+    > Accept: */*
+    Mark bundle as not supporting multiuse
+    < HTTP/1.1 204 No Content
+    < Content-Type: application/json
+    < Request-Id: 1944481e-7a08-11ec-8028-0242ac120003
+    < X-Influxdb-Build: OSS
+    < X-Influxdb-Version: 1.8.10
+    < X-Request-Id: 1944481e-7a08-11ec-8028-0242ac120003
+    < Date: Thu, 20 Jan 2022 15:46:14 GMT
+
+    - curl http://localhost:8888 -v
+    Trying ::1:8888...
+    TCP_NODELAY set
+    Connected to localhost (::1) port 8888 (#0)
+    > GET / HTTP/1.1
+    > Host: localhost:8888
+    > User-Agent: curl/7.68.0
+    > Accept: */*
+    >
+    Mark bundle as not supporting multiuse
+    < HTTP/1.1 200 OK
+    < Accept-Ranges: bytes
+    < Cache-Control: public, max-age=3600
+    < Content-Length: 336
+    < Content-Security-Policy: script-src 'self'; object-src 'self'
+    < Content-Type: text/html; charset=utf-8
+    < Etag: "336820331"
+    < Last-Modified: Fri, 08 Oct 2021 20:33:01 GMT
+    < Vary: Accept-Encoding
+    < X-Chronograf-Version: 1.9.1
+    < X-Content-Type-Options: nosniff
+    < X-Frame-Options: SAMEORIGIN
+    < X-Xss-Protection: 1; mode=block
+    < Date: Thu, 20 Jan 2022 15:46:42 GMT
+    <
+    Connection #0 to host localhost left intact
+    <!DOCTYPE html><html><head><meta http-equiv="Content-type" content="text/html; charset=utf-8"><title>Chronograf</title>
+    <link rel="icon shortcut" href="/favicon.fa749080.ico"><link rel="stylesheet" href="/src.3dbae016.css"></head><body> 
+    <div id="react-root" data-basepath=""></div> <script src="/src.fab22342.js"></script> </body></html>
+
+    - curl http://localhost:9092/kapacitor/v1/ping -v
+    Trying ::1:9092...
+    TCP_NODELAY set
+    Connected to localhost (::1) port 9092 (#0)
+    > GET /kapacitor/v1/ping HTTP/1.1
+    > Host: localhost:9092
+    > User-Agent: curl/7.68.0
+    > Accept: */*
+    >
+    Mark bundle as not supporting multiuse
+    < HTTP/1.1 204 No Content
+    < Content-Type: application/json; charset=utf-8
+    < Request-Id: 1372b4a0-7a08-11ec-8017-000000000000
+    < X-Kapacitor-Version: 1.6.2
+    < Date: Thu, 20 Jan 2022 15:46:04 GMT
 
 А также скриншот веб-интерфейса ПО chronograf (`http://localhost:8888`). 
+
+[скриншот](img/1.JPG)
 
 P.S.: если при запуске некоторые контейнеры будут падать с ошибкой - проставьте им режим `Z`, например
 `./data:/var/lib:Z`
@@ -45,8 +107,9 @@ P.S.: если при запуске некоторые контейнеры б�
 
 Для выполнения задания приведите скриншот с отображением метрик утилизации места на диске 
 (disk->host->telegraf_container_id) из веб-интерфейса.
+[скриншот](img/2.JPG)
 
-5. Изучите список [telegraf inputs](https://github.com/influxdata/telegraf/tree/master/plugins/inputs). 
+#### 5. Изучите список [telegraf inputs](https://github.com/influxdata/telegraf/tree/master/plugins/inputs). 
 Добавьте в конфигурацию telegraf следующий плагин - [docker](https://github.com/influxdata/telegraf/tree/master/plugins/inputs/docker):
 ```
 [[inputs.docker]]
@@ -73,25 +136,4 @@ P.S.: если при запуске некоторые контейнеры б�
 После настройке перезапустите telegraf, обновите веб интерфейс и приведите скриншотом список `measurments` в 
 веб-интерфейсе базы telegraf.autogen . Там должны появиться метрики, связанные с docker.
 
-Факультативно можете изучить какие метрики собирает telegraf после выполнения данного задания.
-
-## Дополнительное задание (со звездочкой*) - необязательно к выполнению
-
-В веб-интерфейсе откройте вкладку `Dashboards`. Попробуйте создать свой dashboard с отображением:
-
-    - утилизации ЦПУ
-    - количества использованного RAM
-    - утилизации пространства на дисках
-    - количество поднятых контейнеров
-    - аптайм
-    - ...
-    - фантазируйте)
-    
-    ---
-
-### Как оформить ДЗ?
-
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
-
----
-
+[скриншот](img/3.JPG)
