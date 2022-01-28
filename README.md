@@ -1,5 +1,7 @@
 # Домашние задания
 
+## [Домашнее задание к занятию "10.04. ELK"](10-monitoring-04-elk/README.md)
+
 ## [Домашнее задание к занятию "10.03. Grafana"](10-monitoring-03-grafana/README.md)
 
 ## [Домашнее задание к занятию "10.02. Системы мониторинга"](10-monitoring-02-systems/README.md)
