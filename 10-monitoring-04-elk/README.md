@@ -32,9 +32,9 @@ Filebeat следует сконфигурировать для отправки
     networks:
       - elastic
 
-[Скриншот docker ps](./img/1.PNG)
+![Скриншот docker ps](./img/1.PNG)
 
-[Интерфейс kibana](./img/2.PNG)
+![Интерфейс kibana](./img/2.PNG)
 
 ## Задание 2
 
@@ -50,9 +50,9 @@ Filebeat следует сконфигурировать для отправки
  
 Скриншоты kibana
 
-[1](./img/4.PNG)
-[2](./img/5.PNG)
-[3](./img/6.PNG)
+![1](./img/4.PNG)
+![2](./img/5.PNG)
+![3](./img/6.PNG)
 ---
 
 ### Как оформить ДЗ?
